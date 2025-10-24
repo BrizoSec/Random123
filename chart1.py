@@ -8,7 +8,7 @@ fig = plt.figure(figsize=(12, 10))
 ax = fig.add_subplot(111, projection='polar')
 
 # Define the categories (geographic regions)
-categories = ['United States', 'India', 'Other', 'Japan', 'China', 'Great Britain']
+categories = ['United States', 'Instanbul', 'Other', 'Yemen', 'China', 'Great Britain']
 num_vars = len(categories)
 
 # Compute angle for each axis
