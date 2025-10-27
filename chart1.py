@@ -1,84 +1,74 @@
 import matplotlib.pyplot as plt
 import numpy as np
-from matplotlib.patches import Rectangle
 import os
 
 # Set up the figure and axis
-fig = plt.figure(figsize=(12, 10))
-ax = fig.add_subplot(111, projection='polar')
+fig, ax = plt.subplots(figsize=(12, 8))
 
 # Define the categories (geographic regions)
-categories = ['United States', 'Instanbul', 'Other', 'Yemen', 'China', 'Great Britain']
-num_vars = len(categories)
-
-# Compute angle for each axis
-angles = np.linspace(0, 2 * np.pi, num_vars, endpoint=False).tolist()
-angles += angles[:1]  # Complete the circle
+regions = ['United States', 'Istanbul', 'Other', 'Yemen', 'China', 'Great Britain']
+num_regions = len(regions)
 
 # Data for each business unit (number of cases per region)
 business_unit_1 = [4, 12, 16, 3, 1, 5]
 business_unit_2 = [12, 8, 19, 9, 2, 13]
 business_unit_3 = [6, 15, 5, 9, 13, 2]
 
-# Calculate totals and rank
+# Calculate totals
 total_1 = sum(business_unit_1)
 total_2 = sum(business_unit_2)
 total_3 = sum(business_unit_3)
 
-# Find max value for scaling
-max_value = max(max(business_unit_1), max(business_unit_2), max(business_unit_3))
+# Business units (divisions) - these will be the bars
+divisions = ['Business Unit 1', 'Business Unit 2', 'Business Unit 3']
+x_pos = np.arange(len(divisions))
 
-# Complete the circle for each dataset
-business_unit_1 += business_unit_1[:1]
-business_unit_2 += business_unit_2[:1]
-business_unit_3 += business_unit_3[:1]
+# Organize data by region for stacking
+# Each row represents a region, columns are business units
+data = np.array([
+    [business_unit_1[i], business_unit_2[i], business_unit_3[i]]
+    for i in range(num_regions)
+])
 
-# Plot data with rankings
-ax.plot(angles, business_unit_2, 'o-', linewidth=2.5, label=f'Business Unit 2 (Total: {total_2})', color='#FF8C00', markersize=8)
-ax.fill(angles, business_unit_2, alpha=0.15, color='#FF8C00')
+# Colors for each region
+colors = ['#DC3545', '#FF8C00', '#4A90E2', '#28A745', '#9B59B6', '#17A2B8']
 
-ax.plot(angles, business_unit_3, 'o-', linewidth=2.5, label=f'Business Unit 3 (Total: {total_3})', color='#4A90E2', markersize=8)
-ax.fill(angles, business_unit_3, alpha=0.15, color='#4A90E2')
+# Create stacked bars
+bar_width = 0.6
+bottom = np.zeros(len(divisions))
 
-ax.plot(angles, business_unit_1, 'o-', linewidth=2.5, label=f'Business Unit 1 (Total: {total_1})', color='#DC3545', markersize=8)
-ax.fill(angles, business_unit_1, alpha=0.15, color='#DC3545')
+bars = []
+for i, (region_data, color) in enumerate(zip(data, colors)):
+    bar = ax.bar(x_pos, region_data, bar_width, bottom=bottom,
+                 label=regions[i], color=color, edgecolor='white', linewidth=1.5)
+    bars.append(bar)
+    bottom += region_data
 
-# Fix axis to go in the right order and start at 12 o'clock
-ax.set_theta_offset(np.pi / 2)
-ax.set_theta_direction(-1)
+# Customize the chart
+ax.set_ylabel('Number of Cases', fontsize=14, weight='bold')
+ax.set_xlabel('Business Units', fontsize=14, weight='bold')
+ax.set_title('Regional Impact Profile\nNew Incidents by Business Unit',
+             fontsize=20, weight='bold', pad=20)
 
-# Set the labels for each axis
-ax.set_xticks(angles[:-1])
-ax.set_xticklabels(categories, size=18, weight='bold')
-
-# Set y-axis limits and labels to accommodate case numbers
-y_max = int(np.ceil(max_value / 5) * 5)  # Round up to nearest increment
-ax.set_ylim(0, y_max)
-
-# Create evenly spaced ticks
-num_ticks = 5
-tick_values = np.linspace(0, y_max, num_ticks)
-ax.set_yticks(tick_values)
-ax.set_yticklabels([f'{int(v)}' for v in tick_values], size=16, color='gray')
+# Set x-axis labels
+ax.set_xticks(x_pos)
+ax.set_xticklabels([f'{div}\n(Total: {total})'
+                     for div, total in zip(divisions, [total_1, total_2, total_3])],
+                    fontsize=12, weight='bold')
 
 # Add grid
-ax.grid(True, linestyle='--', linewidth=0.7, alpha=0.7)
-
-# Add title
-plt.title('Regional Impact Profile\nNew Incidents by Business Unit',
-          size=24, weight='bold', pad=20, loc='center')
+ax.grid(True, axis='y', linestyle='--', linewidth=0.7, alpha=0.5, zorder=0)
+ax.set_axisbelow(True)
 
 # Add legend
-legend = ax.legend(loc='upper right', bbox_to_anchor=(1.3, 0.95),
-                   frameon=True, fontsize=11,
-                   markerscale=1.2, fancybox=True, shadow=True)
+legend = ax.legend(loc='upper right', frameon=True, fontsize=11,
+                   fancybox=True, shadow=True, ncol=2)
 legend.get_frame().set_facecolor('white')
 legend.get_frame().set_edgecolor('gray')
 legend.get_frame().set_linewidth(1.5)
 
-# Adjust layout to prevent label cutoff
+# Adjust layout
 plt.tight_layout()
-plt.subplots_adjust(top=0.85, bottom=0.05)
 
 # Create outputs directory if it doesn't exist
 output_dir = 'outputs'
@@ -88,7 +78,7 @@ os.makedirs(output_dir, exist_ok=True)
 output_path = os.path.join(output_dir, 'business_unit_cases_by_region.png')
 plt.savefig(output_path, dpi=300, bbox_inches='tight', facecolor='white')
 
-print("Radar chart created successfully!")
+print("Stacked bar chart created successfully!")
 print(f"Saved to: {output_path}")
 
 # Display the plot
